@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#090c12">
+  
+  <title>A Love Letter for Uyanga 🌸✨</title>
+  
+  <!-- Open Graph for iMessage / SMS link preview -->
+  <meta property="og:title" content="A Special Letter for Uyanga 🌸✨">
+  <meta property="og:description" content="A handcrafted letter written with all my love, just for you. Tap to open... 💌">
+  <meta property="og:type" content="website">
+
+  <!-- Google Fonts: Elegant Calligraphy & Romantic Serif -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Great+Vibes&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Ambient Petals & Glitter Canvas (Background) -->
+  <canvas id="ambient-canvas"></canvas>
+
+  <!-- Interactive Touch Glitter Canvas (Foreground for finger trails) -->
+  <canvas id="touch-canvas"></canvas>
+
+  <!-- Top Floating Controls -->
+  <header class="top-nav">
+    <div class="audio-status" id="audio-status">🎵 Playing Peaceful Breeze</div>
+    <button id="music-btn" class="music-toggle" aria-label="Toggle ambient music" title="Toggle Music">
+      <span class="music-icon">🎵</span>
+    </button>
+  </header>
+
+  <!-- Sparkle hint indicator -->
+  <div class="sparkle-hint" id="sparkle-hint">Touch anywhere for sparkles ✨</div>
+
+  <main class="scene-container">
+    
+    <!-- ==================== ENVELOPE STAGE ==================== -->
+    <div class="envelope-wrapper" id="envelope-wrapper">
+      
+      <!-- Gentle ambient aura around envelope -->
+      <div class="envelope-glow"></div>
+
+      <div class="envelope" id="envelope">
+        
+        <!-- Back flap inside envelope -->
+        <div class="envelope-interior">
+          <div class="interior-pattern"></div>
+        </div>
+
+        <!-- The Folded Letter (inside envelope before opening) -->
+        <div class="folded-paper" id="folded-paper">
+          <div class="paper-crease"></div>
+          <div class="paper-peek-leaf">
+            <!-- Elegant Japanese Leaf & Swirl Crest -->
+            <svg viewBox="0 0 100 100" class="konoha-svg-gold">
+              <path d="M 50,14 C 70,14 86,30 86,50 C 86,70 70,86 50,86 C 41,86 33,82 27,76 L 16,90 L 22,70 C 16,63 14,57 14,50 C 14,30 30,14 50,14 Z M 50,22 C 35,22 22,35 22,50 C 22,64 34,77 49,77 C 64,77 77,64 77,50 C 77,37 67,27 54,23 C 44,20 35,26 33,35 C 31,42 35,49 42,52 C 47,54 53,52 55,47 C 56,43 54,39 50,38 C 47,37 45,39 45,41" 
+                    fill="none" stroke="currentColor" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Envelope Front Pocket (Lower portion) -->
+        <div class="envelope-pocket">
+          
+          <!-- Elegant Gold Ribbon / Sash for Recipient -->
+          <div class="envelope-sash">
+            <span class="sash-decor">🌸</span>
+            <div class="sash-text-wrapper">
+              <span class="sash-label">Special Delivery For</span>
+              <h1 class="recipient-name">Uyanga</h1>
+            </div>
+            <span class="sash-decor">🌸</span>
+          </div>
+
+          <div class="envelope-subtitle">
+            <span class="sub-leaf">✨</span> Sealed With All My Love 🌸
+          </div>
+
+        </div>
+
+        <!-- Top Flap of Envelope -->
+        <div class="envelope-flap" id="envelope-flap">
+          <div class="flap-pattern"></div>
+        </div>
+
+        <!-- Wax Seal (Embossed Leaf Crest) -->
+        <div class="wax-seal" id="wax-seal" role="button" tabindex="0" aria-label="Open Love Letter">
+          <div class="seal-glow-ring"></div>
+          <div class="seal-body">
+            <div class="seal-rim"></div>
+            <!-- Leaf Crest in Center of Wax Seal -->
+            <svg viewBox="0 0 100 100" class="seal-konoha-icon">
+              <path d="M 50,14 C 70,14 86,30 86,50 C 86,70 70,86 50,86 C 41,86 33,82 27,76 L 16,90 L 22,70 C 16,63 14,57 14,50 C 14,30 30,14 50,14 Z M 50,22 C 35,22 22,35 22,50 C 22,64 34,77 49,77 C 64,77 77,64 77,50 C 77,37 67,27 54,23 C 44,20 35,26 33,35 C 31,42 35,49 42,52 C 47,54 53,52 55,47 C 56,43 54,39 50,38 C 47,37 45,39 45,41" 
+                    fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="seal-prompt">
+            <span class="prompt-text">Tap seal to open</span>
+            <span class="prompt-sparkle">✨</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ==================== UNFOLDED LETTER STAGE ==================== -->
+    <div class="letter-modal" id="letter-modal" aria-hidden="true">
+      <div class="letter-scroll-wrapper">
+        <article class="letter-paper" id="letter-paper">
+          
+          <!-- Re-fold / Re-play button -->
+          <button class="refold-btn" id="refold-btn" aria-label="Fold letter back into envelope" title="Fold back">
+            <span>✉️ Fold Letter</span>
+          </button>
+
+          <!-- Decorative Japanese Corner Ornaments -->
+          <div class="paper-corner top-left"></div>
+          <div class="paper-corner top-right"></div>
+          <div class="paper-corner bottom-left"></div>
+          <div class="paper-corner bottom-right"></div>
+
+          <!-- Subtle Watermark in background -->
+          <div class="paper-watermark">
+            <svg viewBox="0 0 100 100">
+              <path d="M 50,14 C 70,14 86,30 86,50 C 86,70 70,86 50,86 C 41,86 33,82 27,76 L 16,90 L 22,70 C 16,63 14,57 14,50 C 14,30 30,14 50,14 Z M 50,22 C 35,22 22,35 22,50 C 22,64 34,77 49,77 C 64,77 77,64 77,50 C 77,37 67,27 54,23 C 44,20 35,26 33,35 C 31,42 35,49 42,52 C 47,54 53,52 55,47 C 56,43 54,39 50,38 C 47,37 45,39 45,41" 
+                    fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+
+          <!-- Letter Header -->
+          <header class="letter-header">
+            <div class="sakura-badge">
+              <span class="sakura-icon">🌸</span>
+              <span class="badge-konoha">✨</span>
+              <span class="sakura-icon">🌸</span>
+            </div>
+            <p class="letter-date" id="letter-date">A Special Evening</p>
+            <h2 class="letter-salutation">My Dearest Uyanga,</h2>
+          </header>
+
+          <!-- Letter Body Text (Pure heartfelt love, flowers & sparkles) -->
+          <div class="letter-content">
+            <p class="letter-paragraph opening">
+              I wanted to make something special just for you—a little digital keepsake that exists only to remind you how deeply and truly you are loved.
+            </p>
+
+            <p class="letter-paragraph">
+              From the moment you came into my life, everything became so much brighter and softer. You have this effortless way of bringing warmth into any room, turning ordinary days into something rare and beautiful. Whenever I look at you, I am constantly reminded of how lucky I am to have you by my side.
+            </p>
+
+            <!-- Sweet Romantic Cards -->
+            <div class="ninja-vows-grid">
+              
+              <div class="vow-card">
+                <div class="vow-icon">🌸</div>
+                <div class="vow-details">
+                  <h3 class="vow-title">Your Blooming Warmth</h3>
+                  <p class="vow-desc">Like the first gentle blossoms of spring, your kindness, smile, and presence bring a comfort that makes everything in my world feel peaceful and whole.</p>
+                </div>
+              </div>
+
+              <div class="vow-card">
+                <div class="vow-icon">✨</div>
+                <div class="vow-details">
+                  <h3 class="vow-title">Magic in Every Moment</h3>
+                  <p class="vow-desc">Whether we're sharing quiet moments or laughing until our stomachs hurt, being with you makes every ordinary second feel like pure magic and glitter.</p>
+                </div>
+              </div>
+
+              <div class="vow-card">
+                <div class="vow-icon">💫</div>
+                <div class="vow-details">
+                  <h3 class="vow-title">My Constant Promise</h3>
+                  <p class="vow-desc">Through every season and whatever comes our way, I promise to always stand by your side, listen to you, make you laugh, and cherish you with all my heart.</p>
+                </div>
+              </div>
+
+            </div>
+
+            <p class="letter-paragraph highlight-box">
+              <span class="quote-mark">“</span>
+              In a world full of billions of people, you are my favorite person, my safest home, and my happiest thought.
+              <span class="quote-mark">”</span>
+            </p>
+
+            <p class="letter-paragraph closing">
+              Thank you for being uniquely, wonderfully you. I love you more than words could ever fit on paper, today and always.
+            </p>
+
+            <div class="letter-signature-block">
+              <p class="sign-off">With all my love and devotion,</p>
+              <p class="signature-name">Forever Yours ❤️</p>
+              <div class="ninja-stamp">
+                <span class="stamp-leaf">🌸</span>
+                <span class="stamp-text">SEALED WITH LOVE</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Interactive Love Shower Button -->
+          <footer class="letter-footer">
+            <button class="love-shower-btn" id="love-shower-btn">
+              <span class="btn-sparkle">✨</span>
+              <span class="btn-text">Send Love Back</span>
+              <span class="btn-heart">❤️</span>
+            </button>
+            <p class="footer-tip">Tap anywhere on the screen to create your own flower petals & glitters!</p>
+          </footer>
+
+        </article>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

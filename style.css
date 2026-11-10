@@ -1,0 +1,975 @@
+/* ==========================================================================
+   A LOVE LETTER FOR UYANGA 🍃🌸✨
+   Tailored for Mobile Safari (iPhone) & Responsive Desktops
+   ========================================================================== */
+
+:root {
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-script: 'Great Vibes', cursive;
+  --font-sans: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
+  
+  /* Color Palette */
+  --bg-dark: #090c12;
+  --bg-twilight: #161824;
+  --envelope-base: #561620;
+  --envelope-dark: #3a0d14;
+  --envelope-light: #731e2b;
+  
+  --gold-foil: #dfb85d;
+  --gold-light: #fef0ba;
+  --gold-deep: #b38933;
+  
+  --wax-red: #8f1925;
+  --wax-gold: #c98e32;
+  
+  --paper-cream: #faf6ee;
+  --paper-aged: #f4ecdf;
+  --ink-primary: #271714;
+  --ink-secondary: #5a3c36;
+  --sakura-pink: #ffb7c5;
+  --sakura-glow: #ff7597;
+  --leaf-green: #488950;
+  
+  --shadow-warm: 0 16px 36px rgba(0, 0, 0, 0.45);
+  --shadow-paper: 0 20px 50px rgba(18, 12, 10, 0.35);
+}
+
+/* Reset & Box Sizing */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow: hidden;
+  overflow-x: clip;
+  background: radial-gradient(circle at 50% 20%, #1e1b2e 0%, var(--bg-dark) 75%);
+  color: #fff;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Canvas Layers */
+#ambient-canvas,
+#touch-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100dvh;
+  pointer-events: none;
+}
+
+#ambient-canvas {
+  z-index: 1;
+}
+
+#touch-canvas {
+  z-index: 99;
+}
+
+/* ==========================================================================
+   TOP BAR & AUDIO CONTROLS
+   ========================================================================== */
+
+.top-nav {
+  position: fixed;
+  top: max(16px, env(safe-area-inset-top));
+  right: max(16px, env(safe-area-inset-right));
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 110;
+  pointer-events: auto;
+}
+
+.audio-status {
+  padding: 6px 12px;
+  background: rgba(22, 24, 36, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(223, 184, 93, 0.3);
+  border-radius: 20px;
+  font-size: 0.75rem;
+  color: var(--gold-light);
+  letter-spacing: 0.04em;
+  opacity: 0;
+  transform: translateX(10px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.audio-status.visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.music-toggle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(223, 184, 93, 0.4);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--gold-light);
+  font-size: 1.25rem;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.music-toggle:active {
+  transform: scale(0.92);
+}
+
+.music-toggle.playing {
+  background: rgba(223, 184, 93, 0.25);
+  border-color: var(--gold-foil);
+  box-shadow: 0 0 16px rgba(223, 184, 93, 0.5);
+  animation: pulseMusic 2.5s infinite ease-in-out;
+}
+
+@keyframes pulseMusic {
+  0%, 100% { box-shadow: 0 0 10px rgba(223, 184, 93, 0.4); }
+  50% { box-shadow: 0 0 20px rgba(223, 184, 93, 0.8); }
+}
+
+/* Sparkle Hint */
+.sparkle-hint {
+  position: fixed;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  z-index: 20;
+  font-size: 0.8rem;
+  color: rgba(255, 240, 200, 0.75);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  pointer-events: none;
+  opacity: 0.8;
+  animation: gentleBlink 3s ease-in-out infinite;
+  text-shadow: 0 0 8px rgba(223, 184, 93, 0.6);
+  white-space: nowrap;
+  text-align: center;
+}
+
+@keyframes gentleBlink {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.9; }
+}
+
+/* Main Container */
+.scene-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom) 16px;
+  perspective: 1200px;
+  z-index: 10;
+  overflow: clip;
+}
+
+/* ==========================================================================
+   ENVELOPE STYLES & 3D RIGGING
+   ========================================================================== */
+
+.envelope-wrapper {
+  position: relative;
+  width: 330px;
+  max-width: calc(100vw - 32px);
+  height: 230px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.8s ease;
+  transform-style: preserve-3d;
+}
+
+@media (min-width: 400px) {
+  .envelope-wrapper {
+    width: 360px;
+    height: 245px;
+  }
+}
+
+.envelope-wrapper.fade-out {
+  opacity: 0;
+  transform: scale(0.85) translateY(40px);
+  pointer-events: none;
+}
+
+.envelope-glow {
+  position: absolute;
+  inset: -12px;
+  background: radial-gradient(circle, rgba(223, 184, 93, 0.28) 0%, rgba(255, 117, 151, 0.18) 45%, transparent 70%);
+  filter: blur(20px);
+  pointer-events: none;
+  z-index: -1;
+  animation: auraBreath 4s ease-in-out infinite;
+}
+
+@keyframes auraBreath {
+  0%, 100% { opacity: 0.6; transform: scale(0.98); }
+  50% { opacity: 1; transform: scale(1.04); }
+}
+
+.envelope {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: var(--envelope-base);
+  border-radius: 10px;
+  box-shadow: var(--shadow-warm), 0 0 0 1px rgba(223, 184, 93, 0.4);
+  transform-style: preserve-3d;
+}
+
+/* Envelope Interior Lining */
+.envelope-interior {
+  position: absolute;
+  inset: 0;
+  background: #2b0b11;
+  border-radius: 10px;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.interior-pattern {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(223, 184, 93, 0.15) 1px, transparent 1px);
+  background-size: 16px 16px;
+  opacity: 0.7;
+}
+
+/* Folded Letter Peek inside */
+.folded-paper {
+  position: absolute;
+  bottom: 8px;
+  left: 5%;
+  width: 90%;
+  height: 85%;
+  background: linear-gradient(180deg, var(--paper-cream) 0%, var(--paper-aged) 100%);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  z-index: 2;
+  transition: transform 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 15px;
+  border: 1px solid rgba(223, 184, 93, 0.3);
+}
+
+.paper-crease {
+  position: absolute;
+  top: 40%;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
+}
+
+.paper-peek-leaf {
+  width: 32px;
+  height: 32px;
+  color: var(--gold-deep);
+  opacity: 0.85;
+}
+
+.konoha-svg-gold {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
+}
+
+/* Envelope Front Pocket (Lower portion) */
+.envelope-pocket {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  border-radius: 10px;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--envelope-light) 0%, var(--envelope-base) 100%);
+  clip-path: polygon(0% 0%, 50% 45%, 100% 0%, 100% 100%, 0% 100%);
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.25);
+  border-bottom: 2px solid var(--gold-foil);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding-bottom: 14px;
+}
+
+/* Elegant Japanese Sash Ribbon */
+.envelope-sash {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 6px 20px;
+  margin: 0 auto;
+  width: fit-content;
+  max-width: 88%;
+  background: rgba(22, 7, 10, 0.6);
+  border-radius: 24px;
+  border: 1px solid rgba(223, 184, 93, 0.45);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+.sash-decor {
+  font-size: 1.05rem;
+  opacity: 0.9;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
+}
+
+.sash-text-wrapper {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.sash-label {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--gold-light);
+  opacity: 0.85;
+  line-height: 1;
+}
+
+.recipient-name {
+  font-family: var(--font-script);
+  font-size: 2.2rem;
+  line-height: 1.05;
+  color: #fff9e6;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6), 0 0 10px rgba(223, 184, 93, 0.6);
+  letter-spacing: 0.02em;
+  margin-top: 1px;
+}
+
+.envelope-subtitle {
+  text-align: center;
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.75);
+  letter-spacing: 0.08em;
+  margin-top: 6px;
+}
+
+.sub-leaf {
+  color: #a4e5ab;
+}
+
+/* Envelope Top Flap */
+.envelope-flap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, var(--envelope-light) 0%, var(--envelope-base) 100%);
+  clip-path: polygon(0% 0%, 100% 0%, 50% 42%);
+  transform-origin: top center;
+  transform: rotateX(0deg);
+  transition: transform 0.85s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 4;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+
+.flap-pattern {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 42%;
+  border-bottom: 2px solid var(--gold-foil);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+/* Flap Open State */
+.envelope.open .envelope-flap {
+  transform: rotateX(180deg);
+  z-index: 1;
+}
+
+/* Paper slides up when envelope opens */
+.envelope.open .folded-paper {
+  transform: translateY(-80px);
+}
+
+/* ==========================================================================
+   WAX SEAL (KONOHA HIDDEN LEAF EMBLEM)
+   ========================================================================== */
+
+.wax-seal {
+  position: absolute;
+  top: 42%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 66px;
+  height: 66px;
+  z-index: 5;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.wax-seal:hover,
+.wax-seal:focus-visible {
+  transform: translate(-50%, -50%) scale(1.08);
+}
+
+.wax-seal:active {
+  transform: translate(-50%, -50%) scale(0.94);
+}
+
+.seal-glow-ring {
+  position: absolute;
+  inset: -10px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(223, 184, 93, 0.75) 0%, rgba(255, 117, 151, 0.4) 50%, transparent 70%);
+  animation: sealRingPulse 2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes sealRingPulse {
+  0%, 100% { transform: scale(0.95); opacity: 0.5; }
+  50% { transform: scale(1.15); opacity: 0.95; }
+}
+
+.seal-body {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 35% 35%, #ebbf67 0%, var(--wax-gold) 40%, #7d4d12 100%);
+  border-radius: 50%;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55),
+              inset 0 2px 4px rgba(255, 255, 255, 0.6),
+              inset 0 -3px 6px rgba(0, 0, 0, 0.4),
+              0 0 15px rgba(223, 184, 93, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed rgba(255, 245, 200, 0.4);
+}
+
+.seal-rim {
+  position: absolute;
+  inset: 5px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.seal-konoha-icon {
+  width: 38px;
+  height: 38px;
+  color: #442507;
+  filter: drop-shadow(0 1px 1px rgba(255, 255, 255, 0.45));
+  transition: transform 0.3s ease;
+}
+
+.wax-seal:hover .seal-konoha-icon {
+  transform: rotate(5deg) scale(1.05);
+}
+
+.seal-prompt {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: promptFloat 2s ease-in-out infinite;
+}
+
+.prompt-text {
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold-light);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9), 0 0 10px rgba(223, 184, 93, 0.8);
+  font-weight: 700;
+}
+
+.prompt-sparkle {
+  font-size: 0.85rem;
+}
+
+@keyframes promptFloat {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-4px); }
+}
+
+/* Wax Broken Effect */
+.wax-seal.broken {
+  animation: sealBreak 0.6s forwards ease-in-out;
+  pointer-events: none;
+}
+
+@keyframes sealBreak {
+  0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  50% { transform: translate(-50%, -50%) scale(1.25) rotate(15deg); filter: brightness(1.5); }
+  100% { transform: translate(-50%, -50%) scale(0) rotate(45deg); opacity: 0; }
+}
+
+/* ==========================================================================
+   UNFOLDED LETTER MODAL & PAPER DESIGN
+   ========================================================================== */
+
+.letter-modal {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.8s;
+  padding: max(68px, calc(env(safe-area-inset-top) + 52px)) 16px max(24px, env(safe-area-inset-bottom)) 16px;
+  background: rgba(8, 10, 16, 0.68);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.letter-modal.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.letter-scroll-wrapper {
+  width: 100%;
+  max-width: 580px;
+  max-height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 12px;
+  box-shadow: var(--shadow-paper), 0 0 40px rgba(223, 184, 93, 0.25);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(223, 184, 93, 0.4) transparent;
+}
+
+.letter-scroll-wrapper::-webkit-scrollbar {
+  width: 5px;
+}
+
+.letter-scroll-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(223, 184, 93, 0.4);
+  border-radius: 4px;
+}
+
+/* The Authentic Japanese Washi / Deckled Paper */
+.letter-paper {
+  position: relative;
+  width: 100%;
+  background: linear-gradient(180deg, #fffcf6 0%, #f7f1e4 50%, #f3ebdb 100%);
+  color: var(--ink-primary);
+  padding: 38px 24px 34px 24px;
+  border-radius: 12px;
+  border: 1px solid rgba(223, 184, 93, 0.45);
+  overflow: hidden;
+  box-shadow: inset 0 0 40px rgba(189, 150, 75, 0.12);
+  transform: translateY(40px) scale(0.95);
+  transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.15);
+}
+
+@media (min-width: 480px) {
+  .letter-paper {
+    padding: 50px 42px 42px 42px;
+  }
+}
+
+.letter-modal.open .letter-paper {
+  transform: translateY(0) scale(1);
+}
+
+/* Refold / Replay Button inside Letter */
+.refold-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: rgba(223, 184, 93, 0.15);
+  border: 1px solid rgba(223, 184, 93, 0.4);
+  color: #731e2b;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  z-index: 10;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.refold-btn:active {
+  transform: scale(0.95);
+  background: rgba(223, 184, 93, 0.3);
+}
+
+/* Gold Foil Corner Ornaments */
+.paper-corner {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  pointer-events: none;
+  border: 2px solid var(--gold-foil);
+  opacity: 0.7;
+}
+
+.paper-corner.top-left {
+  top: 10px;
+  left: 10px;
+  border-right: none;
+  border-bottom: none;
+}
+
+.paper-corner.top-right {
+  top: 10px;
+  right: 10px;
+  border-left: none;
+  border-bottom: none;
+}
+
+.paper-corner.bottom-left {
+  bottom: 10px;
+  left: 10px;
+  border-right: none;
+  border-top: none;
+}
+
+.paper-corner.bottom-right {
+  bottom: 10px;
+  right: 10px;
+  border-left: none;
+  border-top: none;
+}
+
+/* Subtle Konoha Leaf Watermark */
+.paper-watermark {
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 240px;
+  height: 240px;
+  opacity: 0.045;
+  color: #000;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.paper-watermark svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* ==========================================================================
+   LETTER TYPOGRAPHY & SECTIONS
+   ========================================================================== */
+
+.letter-header {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.sakura-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 14px;
+  background: rgba(255, 183, 197, 0.2);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 183, 197, 0.4);
+  margin-bottom: 10px;
+}
+
+.sakura-icon {
+  font-size: 0.95rem;
+}
+
+.badge-konoha {
+  font-size: 1.1rem;
+}
+
+.letter-date {
+  font-family: var(--font-serif);
+  font-size: 0.88rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-secondary);
+  opacity: 0.75;
+  margin-bottom: 8px;
+}
+
+.letter-salutation {
+  font-family: var(--font-script);
+  font-size: 2.5rem;
+  font-weight: normal;
+  color: #731e2b;
+  text-shadow: 0 1px 2px rgba(115, 30, 43, 0.15);
+  line-height: 1.15;
+}
+
+@media (min-width: 480px) {
+  .letter-salutation {
+    font-size: 3rem;
+  }
+}
+
+.letter-content {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-serif);
+  font-size: 1.12rem;
+  line-height: 1.75;
+  color: var(--ink-primary);
+}
+
+@media (min-width: 480px) {
+  .letter-content {
+    font-size: 1.18rem;
+    line-height: 1.8;
+  }
+}
+
+.letter-paragraph {
+  margin-bottom: 18px;
+  text-align: justify;
+  text-justify: inter-word;
+}
+
+.letter-paragraph.opening::first-letter {
+  font-family: var(--font-script);
+  font-size: 3.4rem;
+  float: left;
+  line-height: 0.8;
+  margin-right: 8px;
+  margin-top: 4px;
+  color: #731e2b;
+}
+
+/* Vow Cards Grid */
+.ninja-vows-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 22px 0;
+}
+
+.vow-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(223, 184, 93, 0.35);
+  border-radius: 8px;
+  box-shadow: 0 3px 10px rgba(70, 40, 20, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.vow-card:hover {
+  background: rgba(255, 255, 255, 0.9);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(223, 184, 93, 0.2);
+}
+
+.vow-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+
+.vow-title {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: #731e2b;
+  margin-bottom: 3px;
+  letter-spacing: 0.02em;
+}
+
+.vow-desc {
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--ink-secondary);
+}
+
+/* Highlight Quote Box */
+.highlight-box {
+  background: rgba(223, 184, 93, 0.12);
+  border-left: 3px solid var(--gold-foil);
+  padding: 14px 18px;
+  border-radius: 0 8px 8px 0;
+  font-style: italic;
+  color: #55271d;
+  margin: 20px 0;
+  text-align: center;
+  position: relative;
+}
+
+.quote-mark {
+  font-family: var(--font-serif);
+  font-size: 1.8rem;
+  color: var(--gold-deep);
+  line-height: 0;
+  vertical-align: -0.3em;
+  padding: 0 4px;
+}
+
+/* Sign-off & Signature */
+.letter-signature-block {
+  margin-top: 26px;
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.sign-off {
+  font-style: italic;
+  font-size: 1rem;
+  color: var(--ink-secondary);
+}
+
+.signature-name {
+  font-family: var(--font-script);
+  font-size: 2.4rem;
+  color: #731e2b;
+  margin-top: -4px;
+  line-height: 1.2;
+}
+
+.ninja-stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1.5px solid #a82835;
+  padding: 4px 10px;
+  border-radius: 4px;
+  color: #a82835;
+  margin-top: 10px;
+  transform: rotate(-3deg);
+  opacity: 0.9;
+}
+
+.stamp-leaf {
+  font-size: 0.95rem;
+}
+
+.stamp-text {
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+}
+
+/* ==========================================================================
+   INTERACTIVE FOOTER & LOVE SHOWER BUTTON
+   ========================================================================== */
+
+.letter-footer {
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 1px dashed rgba(223, 184, 93, 0.4);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.love-shower-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 28px;
+  border-radius: 30px;
+  background: linear-gradient(135deg, #a82337 0%, #e0536c 100%);
+  color: #ffffff;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 6px 18px rgba(168, 35, 55, 0.35), 0 0 15px rgba(255, 117, 151, 0.3);
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.love-shower-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 24px rgba(168, 35, 55, 0.5), 0 0 25px rgba(255, 183, 197, 0.5);
+}
+
+.love-shower-btn:active {
+  transform: scale(0.95);
+}
+
+.btn-sparkle {
+  color: var(--gold-light);
+  animation: spinSlow 4s linear infinite;
+}
+
+@keyframes spinSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.btn-heart {
+  animation: heartThrob 1.2s ease-in-out infinite;
+}
+
+@keyframes heartThrob {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+.footer-tip {
+  font-size: 0.75rem;
+  color: var(--ink-secondary);
+  opacity: 0.7;
+  letter-spacing: 0.02em;
+}

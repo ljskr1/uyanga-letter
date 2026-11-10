@@ -55,6 +55,37 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Shuriken Swift Whoosh Sound
+  function playShurikenWhoosh() {
+    if (!audioCtx) return;
+    try {
+      const now = audioCtx.currentTime;
+      const bufferSize = audioCtx.sampleRate * 0.18;
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.sin((i / bufferSize) * Math.PI);
+      }
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = buffer;
+
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(1400, now);
+      filter.frequency.exponentialRampToValueAtTime(320, now + 0.18);
+      filter.Q.setValueAtTime(3.5, now);
+
+      const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(0.25, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(audioCtx.destination);
+      noise.start(now);
+    } catch (e) {}
+  }
+
   // Wax Crack / Paper Rustle Sound
   function playWaxBreakSound() {
     if (!audioCtx) return;
@@ -200,43 +231,63 @@ document.addEventListener('DOMContentLoaded', () => {
   // =========================================================================
   let isEnvelopeOpened = false;
 
+  const shurikenSlashEl = document.getElementById('shuriken-slash');
+
   function openLetter() {
     if (isEnvelopeOpened) return;
     isEnvelopeOpened = true;
 
     initAudio();
-    playWaxBreakSound();
-    startAmbientMusic(false);
+    playShurikenWhoosh();
 
-    // Wax seal explodes with particles
-    if (waxSeal) {
-      waxSeal.classList.add('broken');
-      const rect = waxSeal.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
-
-      spawnParticleBurst(centerX, centerY, 55, ['#e2b251', '#fce58d', '#8f1925', '#ffb7c5', '#ffffff']);
+    // Trigger visual shuriken slice animation across the seal
+    if (shurikenSlashEl) {
+      shurikenSlashEl.classList.remove('active');
+      void shurikenSlashEl.offsetWidth;
+      shurikenSlashEl.classList.add('active');
     }
 
-    // Flap opens
-    setTimeout(() => {
-      if (envelope) envelope.classList.add('open');
-    }, 320);
+    const rect = waxSeal ? waxSeal.getBoundingClientRect() : { left: width / 2, top: height / 2, width: 0, height: 0 };
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
 
-    // Fade out hint
-    if (sparkleHint) {
-      sparkleHint.style.opacity = '0';
-      sparkleHint.style.transition = 'opacity 0.6s ease';
-    }
+    // Launch two swift shurikens that slice into the seal
+    activeSlashShurikens.push(
+      new SlashShuriken(centerX - 180, centerY - 150, centerX, centerY, true, () => {
+        playWaxBreakSound();
+        startAmbientMusic(false);
 
-    // Letter emerges & modal appears
-    setTimeout(() => {
-      if (envelopeWrapper) envelopeWrapper.classList.add('fade-out');
-      if (letterModal) {
-        letterModal.classList.add('open');
-        letterModal.setAttribute('aria-hidden', 'false');
-      }
-    }, 950);
+        // Wax seal explodes with particles
+        if (waxSeal) {
+          waxSeal.classList.add('broken');
+          spawnParticleBurst(centerX, centerY, 60, ['#e2b251', '#fce58d', '#8f1925', '#ffb7c5', '#ffffff']);
+        }
+
+        // Flap opens
+        setTimeout(() => {
+          if (envelope) envelope.classList.add('open');
+        }, 300);
+
+        // Fade out hint
+        if (sparkleHint) {
+          sparkleHint.style.opacity = '0';
+          sparkleHint.style.transition = 'opacity 0.6s ease';
+        }
+
+        // Letter emerges & modal appears
+        setTimeout(() => {
+          if (envelopeWrapper) envelopeWrapper.classList.add('fade-out');
+          if (letterModal) {
+            letterModal.classList.add('open');
+            letterModal.setAttribute('aria-hidden', 'false');
+          }
+        }, 900);
+      })
+    );
+
+    activeSlashShurikens.push(
+      new SlashShuriken(centerX + 180, centerY + 150, centerX, centerY, false)
+    );
   }
 
   function refoldLetter() {
@@ -251,6 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Return envelope
     setTimeout(() => {
+      if (shurikenSlashEl) shurikenSlashEl.classList.remove('active');
       if (envelopeWrapper) envelopeWrapper.classList.remove('fade-out');
       if (envelope) envelope.classList.remove('open');
       if (waxSeal) waxSeal.classList.remove('broken');
@@ -308,8 +360,168 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // =========================================================================
-  // 4. CANVAS BACKGROUND: FALLING SAKURA & GOLDEN GLITTERS
+  // 4. SHURIKEN & PARTICLE RENDERERS
   // =========================================================================
+  function drawShuriken(ctx, x, y, size, angle, isGold = false, alpha = 1.0) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+
+    const lightColor = isGold ? '#fef0ba' : '#e2e8f0';
+    const midColor = isGold ? '#dfb85d' : '#64748b';
+    const darkColor = isGold ? '#8c5e1c' : '#1e293b';
+
+    // 4 beveled blades
+    for (let i = 0; i < 4; i++) {
+      const baseAngle = (i * Math.PI) / 2;
+      const tipX = Math.cos(baseAngle) * size;
+      const tipY = Math.sin(baseAngle) * size;
+
+      const leftAngle = baseAngle - Math.PI / 4;
+      const rightAngle = baseAngle + Math.PI / 4;
+
+      const leftVx = Math.cos(leftAngle) * (size * 0.36);
+      const leftVy = Math.sin(leftAngle) * (size * 0.36);
+
+      const rightVx = Math.cos(rightAngle) * (size * 0.36);
+      const rightVy = Math.sin(rightAngle) * (size * 0.36);
+
+      // Light half of the blade
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(tipX, tipY);
+      ctx.lineTo(leftVx, leftVy);
+      ctx.closePath();
+      ctx.fillStyle = lightColor;
+      ctx.fill();
+
+      // Dark shaded half of the blade
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(tipX, tipY);
+      ctx.lineTo(rightVx, rightVy);
+      ctx.closePath();
+      ctx.fillStyle = darkColor;
+      ctx.fill();
+    }
+
+    // Center metallic ring
+    ctx.beginPath();
+    ctx.arc(0, 0, size * 0.22, 0, Math.PI * 2);
+    ctx.fillStyle = midColor;
+    ctx.fill();
+
+    // Center hole
+    ctx.beginPath();
+    ctx.arc(0, 0, size * 0.11, 0, Math.PI * 2);
+    ctx.fillStyle = '#0a0e14';
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  // Active Slash Shurikens (for the dramatic envelope opening jutsu)
+  let activeSlashShurikens = [];
+
+  class SlashShuriken {
+    constructor(startX, startY, targetX, targetY, isGold = true, onHit = null) {
+      this.x = startX;
+      this.y = startY;
+      this.targetX = targetX;
+      this.targetY = targetY;
+      this.size = 18;
+      this.angle = 0;
+      this.spinSpeed = 0.45;
+      this.progress = 0;
+      this.speed = 0.055;
+      this.isGold = isGold;
+      this.onHit = onHit;
+      this.dead = false;
+      this.trail = [];
+    }
+
+    update() {
+      this.trail.push({ x: this.x, y: this.y, alpha: 0.6 });
+      if (this.trail.length > 6) this.trail.shift();
+
+      this.progress += this.speed;
+      this.angle += this.spinSpeed;
+
+      // Ease toward target
+      this.x = this.x + (this.targetX - this.x) * 0.22;
+      this.y = this.y + (this.targetY - this.y) * 0.22;
+
+      const dist = Math.hypot(this.targetX - this.x, this.targetY - this.y);
+      if (dist < 12 || this.progress >= 1) {
+        this.dead = true;
+        if (this.onHit) this.onHit();
+      }
+    }
+
+    draw(ctx) {
+      // Draw motion trail
+      for (let i = 0; i < this.trail.length; i++) {
+        const t = this.trail[i];
+        const trailAlpha = (i / this.trail.length) * 0.35;
+        drawShuriken(ctx, t.x, t.y, this.size * 0.8, this.angle - (this.trail.length - i) * 0.2, this.isGold, trailAlpha);
+      }
+      drawShuriken(ctx, this.x, this.y, this.size, this.angle, this.isGold, 1.0);
+    }
+  }
+
+  // Ambient Gliding Shuriken across twilight sky
+  class AmbientShuriken {
+    constructor() {
+      this.reset();
+    }
+
+    reset() {
+      // Periodic appearance from off-screen
+      this.active = false;
+      this.size = 14 + Math.random() * 8;
+      this.angle = Math.random() * Math.PI * 2;
+      this.spinSpeed = 0.2 + Math.random() * 0.15;
+      this.isGold = Math.random() > 0.4;
+      this.trail = [];
+      this.timer = setTimeout(() => {
+        this.launch();
+      }, 4000 + Math.random() * 8000);
+    }
+
+    launch() {
+      const fromLeft = Math.random() > 0.5;
+      this.x = fromLeft ? -40 : width + 40;
+      this.y = 50 + Math.random() * (height * 0.45);
+      this.vx = (fromLeft ? 1 : -1) * (2.8 + Math.random() * 2.2);
+      this.vy = 0.8 + Math.random() * 1.2;
+      this.active = true;
+    }
+
+    update() {
+      if (!this.active) return;
+      this.x += this.vx;
+      this.y += this.vy;
+      this.angle += this.spinSpeed;
+
+      // Leave sparkle dust
+      if (Math.random() > 0.5) {
+        touchParticles.push(new TouchSparkle(this.x, this.y, this.isGold ? '#fce58d' : '#cbd5e1'));
+      }
+
+      if (this.x < -60 || this.x > width + 60 || this.y > height + 60) {
+        this.active = false;
+        this.reset();
+      }
+    }
+
+    draw(ctx) {
+      if (!this.active) return;
+      drawShuriken(ctx, this.x, this.y, this.size, this.angle, this.isGold, 0.75);
+    }
+  }
+
+  const ambientShuriken = new AmbientShuriken();
   const ambientCanvas = document.getElementById('ambient-canvas');
   const ambientCtx = ambientCanvas.getContext('2d');
 
@@ -427,6 +639,10 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderAmbient() {
     ambientCtx.clearRect(0, 0, width, height);
 
+    // Ambient gliding shuriken across starry sky
+    ambientShuriken.update();
+    ambientShuriken.draw(ambientCtx);
+
     glitters.forEach((g) => {
       g.update();
       g.draw(ambientCtx);
@@ -461,8 +677,9 @@ document.addEventListener('DOMContentLoaded', () => {
       this.life = 1;
       this.decay = 0.02 + Math.random() * 0.025;
       this.rotation = Math.random() * Math.PI * 2;
-      this.rotSpeed = (Math.random() - 0.5) * 0.2;
-      this.isStar = Math.random() > 0.35;
+      this.rotSpeed = (Math.random() - 0.5) * 0.28;
+      this.isShuriken = Math.random() < 0.16;
+      this.isStar = !this.isShuriken && Math.random() > 0.35;
       this.color = color || (Math.random() > 0.5 ? '#fce58d' : (Math.random() > 0.5 ? '#ffb7c5' : '#ffffff'));
     }
 
@@ -484,7 +701,9 @@ document.addEventListener('DOMContentLoaded', () => {
       ctx.shadowBlur = 8;
       ctx.shadowColor = this.color;
 
-      if (this.isStar) {
+      if (this.isShuriken) {
+        drawShuriken(ctx, 0, 0, this.size * 2.2, 0, this.color === '#fce58d' || Math.random() > 0.4, this.life);
+      } else if (this.isStar) {
         ctx.beginPath();
         const s = this.size * 2.2;
         ctx.moveTo(0, -s);
@@ -574,6 +793,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderTouchSparkles() {
     touchCtx.clearRect(0, 0, width, height);
+
+    // Update and draw active slash shurikens (envelope opening jutsu)
+    for (let i = activeSlashShurikens.length - 1; i >= 0; i--) {
+      const s = activeSlashShurikens[i];
+      s.update();
+      s.draw(touchCtx);
+      if (s.dead) {
+        activeSlashShurikens.splice(i, 1);
+      }
+    }
 
     for (let i = touchParticles.length - 1; i >= 0; i--) {
       const p = touchParticles[i];
